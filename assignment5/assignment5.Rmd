@@ -1,0 +1,59 @@
+---
+title: "assignment5"
+author: "Katrina"
+date: "November 18, 2015"
+output: html_document
+---
+
+
+```{r}
+library(caret)
+seaflow = read.csv("seaflow_21min.csv", stringsAsFactors = F)
+summary(seaflow)
+table(seaflow$pop)
+seaflow$pop = as.factor(seaflow$pop)
+inTrain = createDataPartition(seaflow$pop, p=0.75, list=F)
+training = seaflow[inTrain,]
+testing = seaflow[-inTrain,]
+mean(training$time)
+```
+
+```{r}
+library(ggplot2)
+ggplot(aes(x=chl_small, y=pe), data=seaflow) + geom_point(aes(color=pop))
+```
+
+```{r}
+modelTree = train(pop ~ fsc_small + fsc_perp + fsc_big + pe + chl_big + chl_small, method="rpart", data=training)
+library(rpart.plot)
+prp(modelTree$finalModel)
+predictTree = predict(modelTree, newdata=testing)
+table(testing$pop, predictTree)
+table(testing$pop)
+```
+
+```{r}
+library(randomForest)
+# modelRF = train(pop ~ fsc_small + fsc_perp + fsc_big + pe + chl_big + chl_small, method="rf", do.trace=TRUE, data=training)
+
+modelRF = randomForest(pop ~ fsc_small + fsc_perp + fsc_big + pe + chl_big + chl_small, data=training)
+predictRF = predict(modelRF, newdata=testing)
+table(testing$pop, predictRF)
+importance(modelRF)
+```
+
+```{r}
+library(e1071)
+modelSVM = svm(pop ~ fsc_small + fsc_perp + fsc_big + pe + chl_big + chl_small, data=training)
+predictSVM = predict(modelSVM, newdata=testing)
+table(testing$pop, predictSVM)
+```
+
+```{r}
+training = subset(training, training$file_id != 208)
+testing = subset(testing, testing$file_id != 208)
+modelSVM2 = svm(pop ~ fsc_small + fsc_perp + fsc_big + pe + chl_big + chl_small, data=training)
+predictSVM2 = predict(modelSVM2, newdata=testing)
+table(testing$pop, predictSVM2)
+```
+
